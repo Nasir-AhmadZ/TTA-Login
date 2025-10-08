@@ -1,46 +1,35 @@
 from fastapi import FastAPI, HTTPException, status
-from .schemas import User
+from .schemas import UserRegister, UserLogin
 
 app = FastAPI()
-users: list[User] = []
+users = {}
 
-@app.get("/hello")
-def hello():
-    return {"message": "Hello, World!"}
-
-@app.get("/api/users")
+@app.get("/users")
 def get_users():
     return users
 
-@app.get("/api/users/{user_id}")
-def get_user(user_id: int):
-    for u in users:
-        if u.user_id == user_id:
-            return u
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+@app.post("/register")
+def register(user: UserRegister):
+    if user.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    # check if email already used
+    if any(u["email"] == user.email for u in users.values()):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    users[user.username] = {"password":user.password,"email":user.email}
+    return {"message": "User registered successfully"}
 
-@app.post("/api/users", status_code=status.HTTP_201_CREATED)
-def add_user(user: User):
-    if any(u.user_id == user.user_id for u in users):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="user_id already exists")
-    users.append(user)
-    return user
+@app.post("/login")
+def login(user: UserLogin):
+    if user.username not in users:
+        raise HTTPException(status_code=400, detail="Invalid username or password")
 
-@app.put("/api/users/{user_id}")
-def update_user(user: User, user_id: int):
-    for u in users:
-        users[users.index(u)]=user
-    return users
+    if users[user.username]["password"] != user.password:
+        raise HTTPException(status_code=400, detail="Invalid username or password")
 
-@app.delete("/api/users/{user_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int):
-    for u in users:
-        if (u.user_id == user_id):
-            users.remove(u)
-            return users
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")   
-    
-@app.get("/health")
-def health():
-    return print("{ status: ok }")
-    
+    # simple fake token (for demo only)
+    token = f"token-{user.username}"
+    return {
+        "access_token": token,
+        "token_type": "fake",
+        "email": users[user.username]["email"]
+    }
