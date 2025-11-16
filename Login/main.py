@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from .schemas import UserRegister, UserLogin
+from configurations import collection
 
 app = FastAPI()
 users = {}
