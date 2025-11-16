@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List, Dict, Any
 
-from schemas import UserRegister, UserLogin, UserUpdate
-from models import UserModel
-from configurations import collection
+from Login.schemas import UserRegister, UserLogin, UserUpdate
+from Login.models import UserModel
+from Login.configurations import collection
 
 app = FastAPI()
 

@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
-from configurations import collection
+from Login.configurations import collection
 
 
 def _ensure_indexes() -> None:
