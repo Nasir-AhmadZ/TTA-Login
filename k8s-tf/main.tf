@@ -64,7 +64,7 @@ resource "kubernetes_deployment" "nginx" {
       spec {
         container {
           image = "mcarroll321/tta-login"
-          name  = "ffrecomcontainer"
+          name  = "ttalogincontainer"
 
           port {
             container_port = 8000

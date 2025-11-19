@@ -49,7 +49,7 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
 
 resource "aws_eks_node_group" "nodes" {
   cluster_name    = aws_eks_cluster.cluster.name
-  node_group_name = var.name
+  node_group_name = "${var.name}-Login"
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = data.aws_subnets.default.ids
   instance_types = var.instance_types
@@ -71,7 +71,7 @@ resource "aws_eks_node_group" "nodes" {
 }
 
 resource "aws_iam_role" "node_group" {
-  name               = "${var.name}-node-group"
+  name               = "${var.name}-Login-node-group"
   assume_role_policy = data.aws_iam_policy_document.node_assume_role.json
 }
 
