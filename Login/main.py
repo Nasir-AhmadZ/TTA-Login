@@ -18,10 +18,10 @@ def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 #get all users
-@app.get("/users", response_model=List[Dict[str, Any]])
+@app.get("/users", response_model=List[Dict[str, Any]]) # gets all users without sensitive info
 def get_users():
     docs = collection.find({}, {"password_hash": 0, "salt": 0})
-    return [_serialize(d) for d in docs]
+    return [_serialize(d) for d in docs]# loops through documents and serializes each, returns list
 
 #get user by username
 @app.get("/users/{username}")

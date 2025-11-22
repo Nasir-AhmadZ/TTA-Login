@@ -1,10 +1,10 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
-uri = "mongodb+srv://NasirAhmad:Sagheer123@tta-login-cluster.3ocooiw.mongodb.net/?appName=TTA-Login-Cluster"
+uri = "mongodb+srv://NasirAhmad:Sagheer123@tta-login-cluster.3ocooiw.mongodb.net/?appName=TTA-Login-Cluster" # MongoDB connection string
 
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
 
-db = client.UserDB
-collection = db["userData"]
+db = client.UserDB # database name
+collection = db["userData"] # collection name
