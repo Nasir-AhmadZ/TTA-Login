@@ -66,10 +66,7 @@ class UserModel:
 
     @classmethod
     def create_user(cls, username: str, password: str, email: str) -> str:
-        """Create a new user and return its id (string).
-
-        Raises ValueError("username_exists") or ValueError("email_exists") on conflicts.
-        """
+        
         creds = cls._hash_password(password)
         doc = {
             "username": username,

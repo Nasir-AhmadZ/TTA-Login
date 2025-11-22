@@ -17,13 +17,13 @@ def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     out["id"] = str(_id) if _id is not None else None
     return out
 
-#get all users
+
 @app.get("/users", response_model=List[Dict[str, Any]])
 def get_users():
     docs = collection.find({}, {"password_hash": 0, "salt": 0})
     return [_serialize(d) for d in docs]
 
-#get user by username
+
 @app.get("/users/{username}")
 def get_user(username: str):
     doc = collection.find_one({"username": username}, {"password_hash": 0, "salt": 0})
@@ -31,7 +31,7 @@ def get_user(username: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return _serialize(doc)
 
-#register new user
+
 @app.post("/register")
 def register(user: UserRegister):
     try:
@@ -44,7 +44,7 @@ def register(user: UserRegister):
             raise HTTPException(status_code=400, detail="Email already registered")
         raise HTTPException(status_code=500, detail="Registration failed")
 
-#update user info
+
 @app.put("/users/{username}")
 def update_user(username: str, payload: UserUpdate):
     doc = collection.find_one({"username": username})
@@ -59,20 +59,20 @@ def update_user(username: str, payload: UserUpdate):
             raise HTTPException(status_code=400, detail="Email already in use")
         update_fields["email"] = payload.email
     if payload.password:
-        creds = UserModel._hash_password(payload.password)# _hash_password returns dict with hash and salt
+        creds = UserModel._hash_password(payload.password)
         update_fields["password_hash"] = creds["password_hash"]
         update_fields["salt"] = creds["salt"]
 
-    if not update_fields:# nothing to update
+    if not update_fields:
         return {"message": "No changes provided"}
 
-    result = collection.update_one({"username": username}, {"$set": update_fields})# $set updates user document with updated_fields
+    result = collection.update_one({"username": username}, {"$set": update_fields})
     if result.modified_count == 0:
-        raise HTTPException(status_code=500, detail="Update failed")# error if no changes made
-    updated = collection.find_one({"username": username}, {"password_hash": 0, "salt": 0})# gets updated user document without sensitive info
-    return _serialize(updated)# return updated user
+        raise HTTPException(status_code=500, detail="Update failed")
+    updated = collection.find_one({"username": username}, {"password_hash": 0, "salt": 0})
+    return _serialize(updated)
 
-#delete user
+
 @app.delete("/users/{username}")
 def delete_user(username: str):
     result = collection.delete_one({"username": username})
@@ -80,7 +80,7 @@ def delete_user(username: str):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
 
-#login user
+
 @app.post("/login")
 def login(user: UserLogin):
     auth = UserModel.authenticate(user.username, user.password)
