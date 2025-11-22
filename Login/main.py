@@ -35,7 +35,7 @@ def get_user(username: str):
 @app.post("/register")
 def register(user: UserRegister):
     try:
-        user_id = UserModel.create_user(user.username, user.password, user.email)
+        user_id = UserModel.create_user(user.username, user.password, user.email)# creates user and returns user id
         return {"message": "User registered successfully", "id": user_id}
     except ValueError as e:
         if str(e) == "username_exists":
@@ -75,7 +75,7 @@ def update_user(username: str, payload: UserUpdate):
 #delete user
 @app.delete("/users/{username}")
 def delete_user(username: str):
-    result = collection.delete_one({"username": username})
+    result = collection.delete_one({"username": username})# deletes user by username
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
@@ -83,7 +83,7 @@ def delete_user(username: str):
 #login user
 @app.post("/login")
 def login(user: UserLogin):
-    auth = UserModel.authenticate(user.username, user.password)
+    auth = UserModel.authenticate(user.username, user.password)# authenticates user
     if not auth:
         raise HTTPException(status_code=400, detail="Invalid username or password")
     token = f"token-{user.username}"
