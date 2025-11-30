@@ -5,8 +5,21 @@ from typing import Optional, List, Dict, Any
 from Login.schemas import UserRegister, UserLogin, UserUpdate
 from Login.models import UserModel
 from Login.configurations import collection
+from Login.rabbitmq_publisher import get_rabbitmq_publisher
+
+
+# Lifespan context manager for startup/shutdown
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup Connect to RabbitMQ
+    publisher = get_rabbitmq_publisher()
+    publisher.connect()
+    yield
+    # Shutdown close RabbitMQ connection
+    publisher.close()
 
 app = FastAPI()
+
 
 
 def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
@@ -36,6 +49,9 @@ def get_user(username: str):
 def register(user: UserRegister):
     try:
         user_id = UserModel.create_user(user.username, user.password, user.email)# creates user and returns user id
+        # publish registration event
+        publisher = get_rabbitmq_publisher()
+        publisher.publish_user_registration(user_id, user.username, user.email)
         return {"message": "User registered successfully", "id": user_id}
     except ValueError as e:
         if str(e) == "username_exists":
