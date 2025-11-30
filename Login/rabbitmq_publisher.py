@@ -58,3 +58,55 @@ class RabbitMQPublisher::
                     delivery_mode=2,# make message persistent
                     content_type='application/json'                  
                     ))
+
+            logger.info(f"Published event: {event_type}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to publish event {event_type}: {e}")
+            # Attempt to reconnect once
+            try:
+                self.close()
+                self.connect()
+            except:
+                pass
+            return False
+
+    # publish user registration event#
+    def publish_user_registration(self, user_id: str, username:str, email:str):
+        return self.publish_event("user_registration", {
+            "user_id": user_id,
+            "username": username,
+            "email": email
+        })
+
+    # publish user login
+    def publish_user_login(self, user_id: str, username:str):
+        return self.publish_event("user_login", {
+            "user_id": user_id,
+            "username": username
+        })
+
+    # publish user update
+    def publish_user_update(self, user_id: str, username:str, updated_fields: Dict[str, Any]):
+        return self.publish_event("user_update", {
+            "user_id": user_id,
+            "username": username,
+            "updated_fields": updated_fields
+        })
+    
+    # publish user deletion
+    def publish_user_deletion(self, user_id: str, username:str):
+        return self.publish_event("user_deletion", {
+            "user_id": user_id,
+            "username": username
+        })
+    
+
+_publisher = RabbitMQPublisher()
+
+def get_rabbitmq_publisher() -> RabbitMQPublisher:
+    global _publisher
+    if _publisher is None:
+        _publisher = RabbitMQPublisher()
+    return _publisher
