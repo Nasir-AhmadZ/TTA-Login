@@ -8,12 +8,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class RabbitMQPublisher::
-    def __init__(self, rabbitmq_url: str = None):):
-        self.rabbitmq_url = rabbitmq_url or os.getenv(
-            "RABBITMQ_URL",
-            "amqp://guest:guest@localhost:5672/"
-        )
+class RabbitMQPublisher:
+    def __init__(self, rabbitmq_url: str = None):
+        self.rabbitmq_url = rabbitmq_url or os.getenv("RABBITMQ_URL")
         self.connection = None
         self.channel = None
         
@@ -45,7 +42,7 @@ class RabbitMQPublisher::
             
             message = {
                 "event_type": event_type,
-                "timestamp": datetime.utcnow().isoformat(),,
+                "timestamp": datetime.utcnow().isoformat(),
                 "data": data
             }
 

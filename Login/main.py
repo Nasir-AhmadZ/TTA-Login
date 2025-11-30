@@ -103,4 +103,8 @@ def login(user: UserLogin):
     if not auth:
         raise HTTPException(status_code=400, detail="Invalid username or password")
     token = f"token-{user.username}"
+
+    # publish login event
+    publisher = get_rabbitmq_publisher()
+    publisher.publish_user_login(auth["id"], user.username)
     return {"access_token": token, "token_type": "succeful", "user": auth}
