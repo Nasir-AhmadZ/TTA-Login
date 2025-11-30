@@ -28,3 +28,33 @@ class RabbitMQPublisher::
         except Exception as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}")
             raise
+
+    def close(self):
+        try:
+            if self.connection and not self.connection.is_closed:
+                self.connection.close()
+                logger.info("RabbitMQ connection closed")
+        except Exception as e:
+            logger.error(f"Failed to close RabbitMQ connection: {e}")
+            
+    def publish_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        try:
+            if not self.channel or self.connection.is_closed:
+                if not self.connect():
+                    return False
+            
+            message = {
+                "event_type": event_type,
+                "timestamp": datetime.utcnow().isoformat(),,
+                "data": data
+            }
+
+            #pulish message to queue 
+            self.channel.basic_publish(
+                exchange='',
+                routing_key='user_events',
+                body=json.dumps(message),
+                properties=pika.BasicProperties(
+                    delivery_mode=2,# make message persistent
+                    content_type='application/json'                  
+                    ))
