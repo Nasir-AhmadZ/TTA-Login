@@ -16,15 +16,21 @@ class RabbitMQPublisher:
         
     def connect(self):
         try:
+            if not self.rabbitmq_url:
+                logger.warning("RABBITMQ_URL not set; skipping RabbitMQ connection")
+                return False
+
             params = pika.URLParameters(self.rabbitmq_url)
             self.connection = pika.BlockingConnection(params)
             self.channel = self.connection.channel()
-            
+
             self.channel.exchange_declare(exchange='user_events', exchange_type='fanout')
             logger.info("Connected to RabbitMQ")
+            return True
         except Exception as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}")
-            raise
+            # Do not raise here to allow the application to start without RabbitMQ
+            return False
 
     def close(self):
         try:

@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List, Dict, Any
+from contextlib import asynccontextmanager
 
 from Login.schemas import UserRegister, UserLogin, UserUpdate
 from Login.models import UserModel
 from Login.configurations import collection
 from Login.rabbitmq_publisher import get_rabbitmq_publisher
+import logging
 
 
 # Lifespan context manager for startup/shutdown
@@ -13,12 +15,25 @@ from Login.rabbitmq_publisher import get_rabbitmq_publisher
 async def lifespan(app: FastAPI):
     # Startup Connect to RabbitMQ
     publisher = get_rabbitmq_publisher()
-    publisher.connect()
-    yield
-    # Shutdown close RabbitMQ connection
-    publisher.close()
+    try:
+        connected = publisher.connect()
+        if not connected:
+            logging.getLogger("Login.rabbitmq_publisher").warning("RabbitMQ not connected at startup; continuing without publisher")
+    except Exception:
+        logging.getLogger("Login.rabbitmq_publisher").exception("Unexpected error while connecting to RabbitMQ; continuing without publisher")
+        connected = False
 
-app = FastAPI()
+    try:
+        yield
+    finally:
+        # Shutdown close RabbitMQ connection if it was established
+        try:
+            if connected:
+                publisher.close()
+        except Exception:
+            logging.getLogger("Login.rabbitmq_publisher").exception("Error while closing RabbitMQ connection")
+
+app = FastAPI(lifespan=lifespan)
 
 
 
