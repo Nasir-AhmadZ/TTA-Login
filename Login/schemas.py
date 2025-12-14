@@ -17,3 +17,8 @@ class UserRegister(BaseModel): # schema for user registration
 class UserUpdate(BaseModel): # schema for updating user info
     password: Optional[constr(max_length=12)] = None
     email: Optional[EmailStr] = None
+
+
+class UserLogout(BaseModel):
+    username: constr(min_length=2, max_length=50)
+    token: Optional[str] = None

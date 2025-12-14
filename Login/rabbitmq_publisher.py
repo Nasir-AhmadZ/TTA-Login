@@ -3,10 +3,6 @@ import json
 import os
 from typing import Dict, Any
 from datetime import datetime
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class RabbitMQPublisher:
     def __init__(self, rabbitmq_url: str = None):
@@ -17,7 +13,7 @@ class RabbitMQPublisher:
     def connect(self):
         try:
             if not self.rabbitmq_url:
-                logger.warning("RABBITMQ_URL not set; skipping RabbitMQ connection")
+                print("WARNING: RABBITMQ_URL not set; skipping RabbitMQ connection")
                 return False
 
             params = pika.URLParameters(self.rabbitmq_url)
@@ -25,10 +21,10 @@ class RabbitMQPublisher:
             self.channel = self.connection.channel()
 
             self.channel.exchange_declare(exchange='user_events', exchange_type='fanout')
-            logger.info("Connected to RabbitMQ")
+            print("Connected to RabbitMQ")
             return True
         except Exception as e:
-            logger.error(f"Failed to connect to RabbitMQ: {e}")
+            print(f"ERROR: Failed to connect to RabbitMQ: {e}")
             # Do not raise here to allow the application to start without RabbitMQ
             return False
 
@@ -36,9 +32,9 @@ class RabbitMQPublisher:
         try:
             if self.connection and not self.connection.is_closed:
                 self.connection.close()
-                logger.info("RabbitMQ connection closed")
+                print("RabbitMQ connection closed")
         except Exception as e:
-            logger.error(f"Failed to close RabbitMQ connection: {e}")
+            print(f"ERROR: Failed to close RabbitMQ connection: {e}")
             
     def publish_event(self, event_type: str, data: Dict[str, Any]) -> bool:
         try:
@@ -55,18 +51,18 @@ class RabbitMQPublisher:
             #pulish message to queue 
             self.channel.basic_publish(
                 exchange='',
-                routing_key='user_events',
+                routing_key='user_events_queue',
                 body=json.dumps(message),
                 properties=pika.BasicProperties(
                     delivery_mode=2,# make message persistent
                     content_type='application/json'                  
                     ))
 
-            logger.info(f"Published event: {event_type}")
+            print(f"Published event: {event_type}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to publish event {event_type}: {e}")
+            print(f"ERROR: Failed to publish event {event_type}: {e}")
             # Attempt to reconnect once
             try:
                 self.close()
@@ -90,12 +86,11 @@ class RabbitMQPublisher:
             "username": username
         })
 
-    # publish user update
-    def publish_user_update(self, user_id: str, username:str, updated_fields: Dict[str, Any]):
-        return self.publish_event("user_update", {
+    # publish user logout
+    def publish_user_logout(self, user_id: str, username: str):
+        return self.publish_event("user_logout", {
             "user_id": user_id,
-            "username": username,
-            "updated_fields": updated_fields
+            "username": username
         })
     
     # publish user deletion

@@ -3,11 +3,10 @@ from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from Login.schemas import UserRegister, UserLogin, UserUpdate
+from Login.schemas import UserRegister, UserLogin, UserUpdate, UserLogout
 from Login.models import UserModel
 from Login.configurations import collection
 from Login.rabbitmq_publisher import get_rabbitmq_publisher
-import logging
 
 
 # Lifespan context manager for startup/shutdown
@@ -18,9 +17,9 @@ async def lifespan(app: FastAPI):
     try:
         connected = publisher.connect()
         if not connected:
-            logging.getLogger("Login.rabbitmq_publisher").warning("RabbitMQ not connected at startup; continuing without publisher")
+            print("WARNING: RabbitMQ not connected at startup; continuing without publisher")
     except Exception:
-        logging.getLogger("Login.rabbitmq_publisher").exception("Unexpected error while connecting to RabbitMQ; continuing without publisher")
+        print("ERROR: Unexpected error while connecting to RabbitMQ; continuing without publisher")
         connected = False
 
     try:
@@ -31,7 +30,7 @@ async def lifespan(app: FastAPI):
             if connected:
                 publisher.close()
         except Exception:
-            logging.getLogger("Login.rabbitmq_publisher").exception("Error while closing RabbitMQ connection")
+            print("ERROR: Error while closing RabbitMQ connection")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -106,9 +105,23 @@ def update_user(username: str, payload: UserUpdate):
 #delete user
 @app.delete("/users/{username}")
 def delete_user(username: str):
-    result = collection.delete_one({"username": username})# deletes user by username
-    if result.deleted_count == 0:
+    # Get user info before deletion so we can publish the deletion event
+    user = UserModel.find_by_username(username)
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    result = collection.delete_one({"username": username})  # deletes user by username
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to delete user")
+
+    # publish deletion event 
+    publisher = get_rabbitmq_publisher()
+    try:
+        publisher.publish_user_deletion(user.get("id"), user.get("username"))
+    except Exception:
+        # don't fail the HTTP request if publishing fails; just continue
+        print("WARNING: Failed to publish user deletion event")
+
     return {"message": "User deleted"}
 
 #login user
@@ -123,3 +136,21 @@ def login(user: UserLogin):
     publisher = get_rabbitmq_publisher()
     publisher.publish_user_login(auth["id"], user.username)
     return {"access_token": token, "token_type": "succeful", "user": auth}
+
+
+# logout user
+@app.post("/logout")
+def logout(req: UserLogout):
+    # find user
+    user = UserModel.find_by_username(req.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # publish logout event
+    publisher = get_rabbitmq_publisher()
+    try:
+        publisher.publish_user_logout(user.get("id"), req.username)
+    except Exception:
+        print("WARNING: Failed to publish user logout event")
+
+    return {"message": "Logged out"}
