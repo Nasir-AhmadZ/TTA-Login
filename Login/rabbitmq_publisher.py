@@ -2,7 +2,7 @@ import pika
 import json
 import os
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 class RabbitMQPublisher:
     def __init__(self, rabbitmq_url: str = None):
@@ -44,7 +44,7 @@ class RabbitMQPublisher:
             
             message = {
                 "event_type": event_type,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data": data
             }
 
