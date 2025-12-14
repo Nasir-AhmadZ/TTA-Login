@@ -1,7 +1,7 @@
 import os
 import hashlib
 import binascii
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from bson import ObjectId
@@ -62,7 +62,7 @@ class UserModel:
             "email": email,
             "password_hash": creds["password_hash"],
             "salt": creds["salt"],
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         try:
             result = collection.insert_one(doc) # create user in database
