@@ -10,6 +10,16 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    
+  login:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqps://zhdjasig:JGheqoloLZdZyiIx41xN1zgDPOYCarQI@collie.lmq.cloudamqp.com/zhdjasig
+    command: uvicorn Login.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   rabbitmq_data:
