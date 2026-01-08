@@ -70,6 +70,11 @@ resource "kubernetes_deployment" "nginx" {
             container_port = 8000
           }
 
+          env {
+            name = "RABBITMQ_URL"
+            value = "amqps://zhdjasig:JGheqoloLZdZyiIx41xN1zgDPOYCarQI@collie.lmq.cloudamqp.com/zhdjasig"
+          }
+
           resources {
             limits = {
               cpu    = "0.5"

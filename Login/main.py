@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
@@ -7,7 +8,6 @@ from Login.schemas import UserRegister, UserLogin, UserUpdate, UserLogout
 from Login.models import UserModel
 from Login.configurations import collection
 from Login.rabbitmq_publisher import get_rabbitmq_publisher
-
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
@@ -34,7 +34,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     if not doc:

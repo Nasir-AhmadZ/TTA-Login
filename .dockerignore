@@ -1,0 +1,6 @@
+k8s-tf/
+aws-tf/
+.terraform/
+.github/
+.devcontainer/
+tests/

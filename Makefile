@@ -6,7 +6,7 @@ install:
 	pip install -r requirements.txt
 
 run:
-	python -m uvicorn $(APP) --host 0.0.0.0 --port 8000 --reload
+	python -m uvicorn Login.main:app --host 0.0.0.0 --port 8000 --reload
 
 start:
 	nohup python -m uvicorn $(APP) --host 0.0.0.0 --port 8000 --reload \
