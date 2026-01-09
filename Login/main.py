@@ -147,7 +147,7 @@ def login(user: UserLogin):
 # logout user
 @app.post("/logout")
 def logout(req: UserLogout):
-    # find user
+    # find user 
     user = UserModel.find_by_username(req.username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
