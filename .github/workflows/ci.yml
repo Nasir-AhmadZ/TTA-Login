@@ -49,6 +49,4 @@ jobs:
           tags: mcarroll321/tta-login:latest
           push: true
       
-      - name: Inspect
-        run: |
-          docker image inspect mcarroll321/tta-tg:latest
+
